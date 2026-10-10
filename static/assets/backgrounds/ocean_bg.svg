@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%">
+  <defs>
+    <linearGradient id="deepOcean" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#0e6288"/>
+      <stop offset="25%" stop-color="#0a4666"/>
+      <stop offset="60%" stop-color="#06263b"/>
+      <stop offset="100%" stop-color="#02101a"/>
+    </linearGradient>
+
+    <!-- Мягкие объемные лучи солнца (God Rays) -->
+    <linearGradient id="sunBeam1" x1="0%" y1="0%" x2="40%" y2="100%">
+      <stop offset="0%" stop-color="rgba(125, 211, 252, 0.45)"/>
+      <stop offset="40%" stop-color="rgba(56, 189, 248, 0.15)"/>
+      <stop offset="100%" stop-color="rgba(14, 165, 233, 0)"/>
+    </linearGradient>
+    <linearGradient id="sunBeam2" x1="10%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="rgba(186, 230, 253, 0.5)"/>
+      <stop offset="50%" stop-color="rgba(56, 189, 248, 0.12)"/>
+      <stop offset="100%" stop-color="rgba(14, 165, 233, 0)"/>
+    </linearGradient>
+    <linearGradient id="reefShade" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#09314d"/>
+      <stop offset="100%" stop-color="#020e18"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Толща воды -->
+  <rect width="1920" height="1080" fill="url(#deepOcean)"/>
+
+  <!-- Солнечные шлейфы сверху -->
+  <polygon points="400,0 650,0 1100,1080 600,1080" fill="url(#sunBeam1)"/>
+  <polygon points="850,0 1100,0 1600,1080 1200,1080" fill="url(#sunBeam2)"/>
+  <polygon points="150,0 350,0 700,1080 350,1080" fill="url(#sunBeam1)"/>
+  <polygon points="1350,0 1550,0 1920,950 1700,1080" fill="url(#sunBeam2)"/>
+
+  <!-- Дальние подводные рифы по краям -->
+  <path d="M0,1080 L0,550 Q240,680 480,850 Q700,980 900,1080 Z" fill="url(#reefShade)" opacity="0.65"/>
+  <path d="M1920,1080 L1920,520 Q1680,640 1450,820 Q1250,960 1050,1080 Z" fill="url(#reefShade)" opacity="0.65"/>
+</svg>
