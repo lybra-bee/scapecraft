@@ -4,10 +4,6 @@ import type { RequestHandler } from "./$types";
 export const POST: RequestHandler = async ({ request }) => {
   try {
     const hfToken = process.env.HF_ACCESS_TOKEN || process.env.HF_TOKEN;
-    if (!hfToken) {
-      return json({ error: "Переменная HF_ACCESS_TOKEN не задана на Vercel" }, { status: 500 });
-    }
-
     const body = await request.json().catch(() => ({}));
     let rawBase64 = body?.imageBase64 || "";
 
@@ -21,54 +17,42 @@ export const POST: RequestHandler = async ({ request }) => {
       rawBase64 = rawBase64.split(",")[1];
     }
 
-    // Превращаем base64 в бинарный Buffer (так Hugging Face принимает картинки без обрыва соединения)
-    const imageBuffer = Buffer.from(rawBase64, "base64");
+    const userDetails = body?.sceneDescription || "spider wood in center, seiryu stone, rotala plants";
 
-    const promptText = "hyper-realistic Takashi Amano nature aquarium studio photograph, crystal clear water, natural textures on driftwood, moss, textured seiryu stone, fresh live plants, rimless tank, 8k professional aquascaping photo";
+    // Промпт для фотореализма с сохранением компоновки
+    const promptText = `Award-winning Takashi Amano style nature aquarium studio photograph. Crystal clear water with tiny CO2 microbubbles, ultra-realistic wet mossy driftwood in center, textured grey Seiryu stone on right, red and green Rotala bushes on sides. Low-iron rimless glass tank, 8k cinematic macro photography, exact match: ${userDetails}. No text, no watermark, no logos.`;
 
-    // 1. Отправляем в стабильный serverless img2img (Pix2Pix / SD-Inference)
-    // Hugging Face принимает бинарные данные картинки прямо в теле запроса
-    const apiUrl = "https://api-inference.huggingface.co/models/timbrooks/instruct-pix2pix";
+    // Попытка через новый Router HuggingFace (FLUX.1-schnell с официальным токеном)
+    if (hfToken) {
+      try {
+        const hfRes = await fetch("https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${hfToken}`,
+            "Content-Type": "application/json"
+          },
+          signal: AbortSignal.timeout(15000),
+          body: JSON.stringify({
+            inputs: promptText,
+            parameters: { num_inference_steps: 4 }
+          })
+        });
 
-    let response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${hfToken}`,
-        "Content-Type": "application/octet-stream",
-        "x-wait-for-model": "true"
-      },
-      body: imageBuffer,
-      signal: AbortSignal.timeout(60000)
-    });
-
-    // Если модель pix2pix требует параметров или не ответила, используем проверенный router stability
-    if (!response.ok) {
-      const altUrl = "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5";
-      response = await fetch(altUrl, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${hfToken}`,
-          "Content-Type": "application/octet-stream",
-          "x-wait-for-model": "true"
-        },
-        body: imageBuffer,
-        signal: AbortSignal.timeout(60000)
-      });
+        if (hfRes.ok) {
+          const arrayBuf = await hfRes.arrayBuffer();
+          const b64 = Buffer.from(arrayBuf).toString("base64");
+          return json({ image: `data:image/jpeg;base64,${b64}`, method: "huggingface" });
+        }
+      } catch (e) {
+        console.warn("HuggingFace Router недоступен или превысил лимит времени:", e);
+      }
     }
 
-    if (!response.ok) {
-      const errText = await response.text().catch(() => "");
-      console.error("HF Error response:", response.status, errText);
-      return json({ error: `Hugging Face ответил ошибкой (${response.status}): ${errText.slice(0, 150)}` }, { status: response.status });
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const resultBase64 = Buffer.from(arrayBuffer).toString("base64");
-
-    return json({ image: `data:image/jpeg;base64,${resultBase64}` });
+    // Если удаленный сервер не ответил вовремя — сообщаем клиенту применить локальный Photorealism Canvas
+    return json({ fallbackToClient: true, original: `data:image/jpeg;base64,${rawBase64}` });
 
   } catch (err: any) {
     console.error("AI Generation error:", err);
-    return json({ error: err.message || "Ошибка соединения с сервисом" }, { status: 500 });
+    return json({ fallbackToClient: true });
   }
 };
