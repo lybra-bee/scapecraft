@@ -1287,33 +1287,39 @@
       isRendering4K = true;
       if (typeof selectionRing !== "undefined") selectionRing.visible = false;
 
-      // 1. Делаем снимок сцены в высоком разрешении
       renderer.render(scene, camera);
       const rawDataUrl = renderer.domElement.toDataURL("image/jpeg", 0.95);
 
+      const downloadImage = (url, prefix) => {
+        const link = document.createElement("a");
+        link.download = prefix + "_" + Date.now() + ".jpg";
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
       try {
-        // 2. Отправляем на генерацию фотореалистичного кадра
         const res = await fetch("/api/enhance-snapshot", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageBase64: rawDataUrl })
         });
 
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `HTTP ${res.status}`);
+        }
+
         const data = await res.json();
         if (data.image) {
-          const link = document.createElement("a");
-          link.download = "aquascape_studio_photo_" + Date.now() + ".jpg";
-          link.href = data.image;
-          link.click();
+          downloadImage(data.image, "aquascape_studio_photo");
         } else {
-          throw new Error(data.error || "Не удалось получить фото");
+          throw new Error("Нет изображения в ответе");
         }
       } catch (err) {
-        console.warn("Фолбэк на рендер WebGL:", err);
-        const fallbackLink = document.createElement("a");
-        fallbackLink.download = "aquascape_studio_4k_" + Date.now() + ".jpg";
-        fallbackLink.href = rawDataUrl;
-        fallbackLink.click();
+        console.warn("Фолбэк на прямой снимок сцены:", err);
+        downloadImage(rawDataUrl, "aquascape_studio_3d");
       } finally {
         if (typeof selectionRing !== "undefined") selectionRing.visible = true;
         isRendering4K = false;
@@ -1862,7 +1868,7 @@
     </div>
 
     <!-- ПРАВАЯ ПАНЕЛЬ: ИНСПЕКТОР ОБЪЕКТА -->
-    <div class="right-inspector-panel animate-fade-in">
+    <div class="right-inspector-panel animate-fade-in" style="top: 115px !important;">
       <div class="panel-section">
         <div class="flex items-center justify-between">
           <div class="panel-title truncate"><Trees class="w-3.5 h-3.5 text-sky-400 flex-shrink-0" /> {selectedLabel}</div>
@@ -2165,7 +2171,7 @@
 
   /* ШАГ 2: ВЕРХНИЙ РЕЖИМ УПРАВЛЕНИЯ */
   .center-mode-bar {
-    position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
+    position: absolute; top: 115px !important; left: 50%; transform: translateX(-50%);
     display: flex; align-items: center; gap: 8px;
     background: rgba(4, 16, 32, 0.9); backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 12px;
@@ -2196,7 +2202,7 @@
 
   /* ШАГ 2: ЛЕВАЯ ВЕРТИКАЛЬНАЯ БИБЛИОТЕКА (CAD DOCK) */
   .left-library-drawer {
-    position: absolute; top: 110px; left: 16px; bottom: 16px; width: 230px;
+    position: absolute; top: 115px !important; left: 16px; bottom: 16px; width: 230px;
     background: rgba(4, 16, 32, 0.94); backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 16px;
     padding: 12px; display: flex; flex-direction: column; gap: 8px;
@@ -2223,7 +2229,7 @@
 
   /* ШАГ 2: ПРАВАЯ ПАНЕЛЬ ИНСПЕКТОРА */
   .right-inspector-panel {
-    position: absolute; top: 110px; right: 16px; width: 280px;
+    position: absolute; top: 115px !important; right: 16px; width: 280px;
     background: rgba(4, 16, 32, 0.92); backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 16px;
     padding: 14px; display: flex; flex-direction: column; gap: 10px; z-index: 25;
