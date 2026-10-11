@@ -2156,10 +2156,10 @@
   <!-- МОДАЛЬНОЕ ОКНО ИИ ФОТОРЕАЛИЗМА -->
   {#if isAiRenderOpen}
     <div class="modal-backdrop" onclick={(e) => { if (e.target === e.currentTarget && !aiEnhancing) isAiRenderOpen = false; }}>
-      <div class="modal-box w-[920px] max-w-[95vw] max-h-[92vh] flex flex-col animate-fade-in bg-slate-950/98 border border-indigo-500/30 p-5 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden">
+      <div class="modal-box animate-fade-in">
         
         <!-- Заголовок -->
-        <div class="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
+        <div class="flex items-center justify-between pb-2 border-b border-white/10 shrink-0">
           <div class="flex items-center gap-2">
             <Sparkles class="w-5 h-5 text-indigo-400" />
             <h3 class="text-base font-bold text-white">ИИ Фотореализм аквариума</h3>
@@ -2169,13 +2169,13 @@
           </button>
         </div>
 
-        <!-- Контент / Изображение -->
-        <div class="my-3 flex-1 flex flex-col items-center justify-center min-h-[320px] max-h-[62vh] w-full bg-slate-900/80 rounded-xl border border-white/5 overflow-hidden relative">
+        <!-- Контент и фото -->
+        <div class="modal-image-container">
           {#if aiEnhancing}
             <div class="flex flex-col items-center gap-3 p-8 text-center">
               <Loader2 class="w-10 h-10 text-indigo-400 animate-spin" />
-              <p class="text-sm font-semibold text-slate-200">Генерация фотореалистичного акваскейпа...</p>
-              <p class="text-xs text-slate-400 max-w-sm">Соблюдаем геометрию коряг, камней и растений (15-25 сек)</p>
+              <p class="text-sm font-semibold text-slate-200 animate-pulse">Генерация фотореалистичного акваскейпа...</p>
+              <p class="text-xs text-slate-400 max-w-sm">Сохраняем геометрию коряг, камней и растений (15-25 сек)</p>
             </div>
           {:else if aiErrorMessage}
             <div class="flex flex-col items-center gap-2 text-center p-6 text-red-400">
@@ -2186,13 +2186,11 @@
               </button>
             </div>
           {:else if aiEnhancedImage}
-            <div class="w-full h-full flex items-center justify-center p-2">
-              <img src={aiEnhancedImage} alt="AI Aquascape" class="max-w-full max-h-[40vh] md:max-h-[46vh] object-contain rounded-lg shadow-2xl border border-white/10 shrink-0 block mx-auto" />
-            </div>
+            <img src={aiEnhancedImage} alt="AI Aquascape" />
           {/if}
         </div>
 
-        <!-- Футер с кнопками (всегда виден!) -->
+        <!-- Нижняя панель с кнопками (Всегда видна!) -->
         {#if aiEnhancedImage && !aiEnhancing}
           <div class="pt-3 border-t border-white/10 flex items-center justify-between shrink-0 gap-3">
             <span class="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
@@ -2205,7 +2203,7 @@
               <a 
                 href={aiEnhancedImage} 
                 download={"aquascape_ai_" + Date.now() + ".jpg"} 
-                class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 hover:from-indigo-500 hover:to-sky-400 text-xs font-bold text-white flex items-center gap-2 shadow-lg shadow-indigo-950/50 cursor-pointer"
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 hover:from-indigo-500 hover:to-sky-400 text-xs font-bold text-white flex items-center gap-2 shadow-lg cursor-pointer"
               >
                 <Download class="w-4 h-4" /> Скачать фото (JPG)
               </a>
@@ -2590,28 +2588,52 @@
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
-.modal-backdrop {
+.modal-backdrop { }
+  .modal-box { }
+
+  .modal-backdrop {
     position: fixed !important;
     inset: 0 !important;
-    background: rgba(4, 8, 20, 0.9) !important;
-    backdrop-filter: blur(12px) !important;
+    background: rgba(3, 7, 18, 0.92) !important;
+    backdrop-filter: blur(16px) !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     z-index: 99999 !important;
-    padding: 12px !important;
+    padding: 16px !important;
   }
   .modal-box {
     display: flex !important;
     flex-direction: column !important;
     width: 900px !important;
-    max-width: 94vw !important;
-    max-height: 88vh !important; /* Гарантия удержания в пределах экрана */
-    background: rgba(4, 10, 24, 0.98) !important;
+    max-width: 95vw !important;
+    height: auto !important;
+    max-height: 85vh !important; /* Принудительно ограничиваем высоту */
+    background: #020617 !important;
     border: 1px solid rgba(99, 102, 241, 0.4) !important;
     padding: 16px 20px !important;
     border-radius: 16px !important;
-    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8) !important;
-    overflow: hidden !important; /* Убираем выход контента за рамки */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
+    overflow: hidden !important; /* Убираем выход контента наружу */
   }
+  .modal-image-container {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 200px !important;
+    max-height: 52vh !important; /* Жестко ограничиваем высоту картинки */
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    overflow: hidden !important;
+    margin: 12px 0 !important;
+  }
+  .modal-image-container img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-contain: contain !important;
+    border-radius: 8px !important;
+  }
+
 </style>
