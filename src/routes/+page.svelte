@@ -102,6 +102,52 @@
 
   let isCinematicTour = $state(false);
   let isPassportOpen = $state(false);
+  let isAiRenderOpen = $state(false);
+  let aiEnhancing = $state(false);
+  let aiEnhancedImage = $state<string | null>(null);
+  let aiOriginalImage = $state<string | null>(null);
+  let aiErrorMessage = $state<string | null>(null);
+
+  async function generateAiAquascape() {
+    try {
+      if (!renderer || !scene || !camera) return;
+      aiErrorMessage = null;
+      aiEnhancing = true;
+      isAiRenderOpen = true;
+
+      if (typeof selectionRing !== "undefined") selectionRing.visible = false;
+      renderer.render(scene, camera);
+      const snapshotBase64 = renderer.domElement.toDataURL("image/jpeg", 0.95);
+      aiOriginalImage = snapshotBase64;
+
+      // Формируем список присутствующих материалов для промпта
+      const itemsSummary = sceneItemsList.map(i => i.name).join(", ");
+      const desc = itemsSummary ? `Aquarium contains: ${itemsSummary}` : "Nature ADA style aquascape";
+
+      const res = await fetch("/api/enhance-snapshot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: snapshotBase64,
+          sceneDescription: desc
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Ошибка генерации изображения");
+      }
+
+      aiEnhancedImage = data.image;
+    } catch (err: any) {
+      console.error("AI Generation error:", err);
+      aiErrorMessage = err.message || "Не удалось сгенерировать изображение";
+    } finally {
+      aiEnhancing = false;
+      if (typeof selectionRing !== "undefined" && selectedId) selectionRing.visible = true;
+    }
+  }
+
 
   type LibCategory = 'plants' | 'hardscape' | 'decor';
   let activeLibCategory = $state<LibCategory>('plants');
@@ -2079,10 +2125,61 @@
         <span>Паспорт проекта (Печать)</span>
       </button>
 
+      <button onclick={generateAiAquascape} class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white shadow-lg shadow-indigo-950/40 transition-all border border-indigo-400/30 cursor-pointer">
+        <Sparkles class="w-4 h-4 text-amber-300 animate-pulse" />
+        <span>ИИ Фотореализм</span>
+      </button>
+
       <button onclick={takePhotoSnapshot}  class="btn-step3-snapshot">
         <Download class="w-4 h-4" />
         <span>{isRendering4K ? '...' : 'Фото 4K'}</span>
       </button>
+    </div>
+  {/if}
+
+  
+  <!-- МОДАЛЬНОЕ ОКНО ИИ ФОТОРЕАЛИЗМА -->
+  {#if isAiRenderOpen}
+    <div class="modal-backdrop" onclick={(e) => { if (e.target === e.currentTarget && !aiEnhancing) isAiRenderOpen = false; }}>
+      <div class="modal-box w-[880px] max-h-[90vh] flex flex-col animate-fade-in bg-slate-950/95 border border-indigo-500/30 p-5 rounded-2xl shadow-2xl backdrop-blur-2xl">
+        <div class="flex items-center justify-between pb-3 border-b border-white/10">
+          <div class="flex items-center gap-2">
+            <Sparkles class="w-5 h-5 text-indigo-400" />
+            <h3 class="text-base font-bold text-white">ИИ Фотореализм аквариума</h3>
+          </div>
+          <button onclick={() => isAiRenderOpen = false} disabled={aiEnhancing} class="text-slate-400 hover:text-white p-1 rounded-lg">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <div class="my-4 flex flex-col items-center justify-center min-h-[380px] w-full bg-slate-900/60 rounded-xl border border-white/5 overflow-hidden relative">
+          {#if aiEnhancing}
+            <div class="flex flex-col items-center gap-3 p-8 text-center">
+              <Loader2 class="w-10 h-10 text-indigo-400 animate-spin" />
+              <p class="text-sm font-semibold text-slate-200">Превращаем 3D сцену в живой акваскейп...</p>
+              <p class="text-xs text-slate-400 max-w-sm">Генерация реалистичной воды, микропузырьков CO2 и естественной текстуры растений (до 20-30 сек)</p>
+            </div>
+          {:else if aiErrorMessage}
+            <div class="flex flex-col items-center gap-2 text-center p-6 text-red-400">
+              <p class="font-bold text-sm">Произошла ошибка</p>
+              <p class="text-xs text-slate-300 max-w-md">{aiErrorMessage}</p>
+              <button onclick={generateAiAquascape} class="mt-3 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white">
+                Попробовать снова
+              </button>
+            </div>
+          {:else if aiEnhancedImage}
+            <div class="w-full flex flex-col gap-3 p-2">
+              <img src={aiEnhancedImage} alt="AI Aquascape" class="w-full max-h-[58vh] object-contain rounded-lg shadow-xl" />
+              <div class="flex items-center justify-between px-2 pt-1">
+                <span class="text-xs text-emerald-400 font-medium">✓ Готово: фотореалистичный ADA Nature Aquarium</span>
+                <a href={aiEnhancedImage} download={"aquascape_ai_" + Date.now() + ".jpg"} class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white flex items-center gap-2 shadow-lg">
+                  <Download class="w-4 h-4" /> Скачать шедевр
+                </a>
+              </div>
+            </div>
+          {/if}
+        </div>
+      </div>
     </div>
   {/if}
 
