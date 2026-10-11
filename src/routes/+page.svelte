@@ -1641,7 +1641,16 @@
       <button onclick={exportLayoutJson} class="btn-top-glass" title="Сохранить проект в JSON"><Save class="w-3.5 h-3.5 text-emerald-400" /></button>
       <button onclick={() => jsonInputDom?.click()} class="btn-top-glass" title="Открыть проект"><FolderOpen class="w-3.5 h-3.5 text-amber-400" /></button>
       <button onclick={() => resetCameraFn?.()} class="btn-top-glass" title="Сброс камеры"><RotateCcw class="w-3.5 h-3.5 text-slate-300" /></button>
-      <button onclick={takePhotoSnapshot}  class="btn-top-glass text-sky-400 hover:text-sky-300" title="Сделать снимок 4K"><Download class="w-3.5 h-3.5" /></button>
+      <button onclick={() => {
+        const canvas = document.querySelector("canvas");
+        if (!canvas) { alert("3D холст не найден"); return; }
+        const a = document.createElement("a");
+        a.download = "aquascape_studio_" + Date.now() + ".jpg";
+        a.href = canvas.toDataURL("image/jpeg", 0.95);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }} class="btn-top-glass text-sky-400 hover:text-sky-300" title="Сделать снимок 4K"><Download class="w-3.5 h-3.5" /></button>
     </div>
   </header>
 
