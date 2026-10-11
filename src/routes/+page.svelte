@@ -1283,32 +1283,26 @@
     };
 
     
-    takePhotoSnapshot = () => {
+        takePhotoSnapshot = () => {
       try {
         if (!renderer || !scene || !camera) {
-          alert("3D сцена ещё инициализируется...");
+          alert("3D сцена загружается...");
           return;
         }
         if (typeof selectionRing !== "undefined") selectionRing.visible = false;
         
         renderer.render(scene, camera);
         
-        renderer.domElement.toBlob((blob) => {
-          if (!blob) return;
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = "aquascape_studio_photo_" + Date.now() + ".jpg";
-          document.body.appendChild(a);
-          a.click();
-          setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          }, 1000);
-        }, "image/jpeg", 0.95);
-      } catch (e) {
-        console.error("Ошибка снимка:", e);
+        const dataUrl = renderer.domElement.toDataURL("image/jpeg", 0.95);
+        const link = document.createElement("a");
+        link.download = "aquascape_studio_4k_" + Date.now() + ".jpg";
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => document.body.removeChild(link), 300);
+      } catch (err) {
+        console.error("Snapshot error:", err);
+        alert("Ошибка создания снимка: " + err.message);
       } finally {
         if (typeof selectionRing !== "undefined") selectionRing.visible = true;
       }
@@ -1647,7 +1641,7 @@
       <button onclick={exportLayoutJson} class="btn-top-glass" title="Сохранить проект в JSON"><Save class="w-3.5 h-3.5 text-emerald-400" /></button>
       <button onclick={() => jsonInputDom?.click()} class="btn-top-glass" title="Открыть проект"><FolderOpen class="w-3.5 h-3.5 text-amber-400" /></button>
       <button onclick={() => resetCameraFn?.()} class="btn-top-glass" title="Сброс камеры"><RotateCcw class="w-3.5 h-3.5 text-slate-300" /></button>
-      <button onclick={takePhotoSnapshot} disabled={isRendering4K} class="btn-top-glass text-sky-400 hover:text-sky-300" title="Сделать снимок 4K"><Download class="w-3.5 h-3.5" /></button>
+      <button onclick={takePhotoSnapshot}  class="btn-top-glass text-sky-400 hover:text-sky-300" title="Сделать снимок 4K"><Download class="w-3.5 h-3.5" /></button>
     </div>
   </header>
 
@@ -1949,7 +1943,7 @@
         <span>Паспорт проекта (Печать)</span>
       </button>
 
-      <button onclick={takePhotoSnapshot} disabled={isRendering4K} class="btn-step3-snapshot">
+      <button onclick={takePhotoSnapshot}  class="btn-step3-snapshot">
         <Download class="w-4 h-4" />
         <span>{isRendering4K ? '...' : 'Фото 4K'}</span>
       </button>
@@ -2159,7 +2153,7 @@
 
   /* ШАГ 2: ВЕРХНИЙ РЕЖИМ УПРАВЛЕНИЯ */
   .center-mode-bar {
-    position: absolute; top: 270px !important; left: 50%; transform: translateX(-50%);
+    position: absolute; top: 270px !important; left: 40%; transform: translateX(-50%);
     display: flex; align-items: center; gap: 8px;
     background: rgba(4, 16, 32, 0.9); backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 12px;
@@ -2226,7 +2220,7 @@
 
   /* ШАГ 3: НИЖНЯЯ ПАНЕЛЬ ВИЗУАЛА */
   .step3-bottom-bar {
-    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    position: absolute; bottom: 20px; left: 40%; transform: translateX(-50%);
     display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
     background: rgba(4, 16, 32, 0.94); backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 16px;
