@@ -5,7 +5,7 @@ export const POST: RequestHandler = async ({ request }) => {
   try {
     const hfToken = process.env.HF_ACCESS_TOKEN || process.env.HF_TOKEN;
     if (!hfToken) {
-      return json({ error: "Переменная HF_ACCESS_TOKEN не настроена на Vercel" }, { status: 500 });
+      return json({ error: "Переменная HF_ACCESS_TOKEN не задана на Vercel" }, { status: 500 });
     }
 
     const body = await request.json().catch(() => ({}));
@@ -21,66 +21,54 @@ export const POST: RequestHandler = async ({ request }) => {
       rawBase64 = rawBase64.split(",")[1];
     }
 
-    const userDetails = body?.sceneDescription || "aquascape with spider wood and stones";
+    // Превращаем base64 в бинарный Buffer (так Hugging Face принимает картинки без обрыва соединения)
+    const imageBuffer = Buffer.from(rawBase64, "base64");
 
-    const promptText = `Award-winning Takashi Amano style nature aquarium studio photograph. Crystal clear optical water filled with tiny CO2 microbubbles, ultra-realistic wet organic textures on the driftwood, porous rough Seiryu stone, fresh vibrant Rotala aquatic plants, vivid neon tetra fish swimming. Exact match to the 3d layout: ${userDetails}. 8k professional studio lighting, low-iron rimless glass tank, sharp focus, no watermarks, no logos, no text.`;
+    const promptText = "hyper-realistic Takashi Amano nature aquarium studio photograph, crystal clear water, natural textures on driftwood, moss, textured seiryu stone, fresh live plants, rimless tank, 8k professional aquascaping photo";
 
-    const negativePrompt = "blurry, distorted, bad proportions, watermark, logo, text, cartoon, low quality, artifacts, extra tank borders, shifted composition";
+    // 1. Отправляем в стабильный serverless img2img (Pix2Pix / SD-Inference)
+    // Hugging Face принимает бинарные данные картинки прямо в теле запроса
+    const apiUrl = "https://api-inference.huggingface.co/models/timbrooks/instruct-pix2pix";
 
-    // Прямой Image-to-Image запрос через роутер Hugging Face с вашим токеном
-    const response = await fetch("https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-refiner-1.0", {
+    let response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${hfToken}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/octet-stream",
+        "x-wait-for-model": "true"
       },
-      signal: AbortSignal.timeout(45000),
-      body: JSON.stringify({
-        inputs: rawBase64,
-        parameters: {
-          prompt: promptText,
-          negative_prompt: negativePrompt,
-          strength: 0.5,
-          guidance_scale: 7.5
-        }
-      })
+      body: imageBuffer,
+      signal: AbortSignal.timeout(60000)
     });
 
+    // Если модель pix2pix требует параметров или не ответила, используем проверенный router stability
     if (!response.ok) {
-      // Резервная модель на случай недоступности первой
-      const altResponse = await fetch("https://api-inference.huggingface.co/models/timbrooks/instruct-pix2pix", {
+      const altUrl = "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5";
+      response = await fetch(altUrl, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${hfToken}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/octet-stream",
+          "x-wait-for-model": "true"
         },
-        signal: AbortSignal.timeout(45000),
-        body: JSON.stringify({
-          inputs: rawBase64,
-          parameters: {
-            prompt: "Make it an award-winning Takashi Amano nature aquarium studio photograph, real water, real plants, real stones",
-            image_guidance_scale: 1.6
-          }
-        })
+        body: imageBuffer,
+        signal: AbortSignal.timeout(60000)
       });
+    }
 
-      if (!altResponse.ok) {
-        const errText = await response.text().catch(() => "");
-        throw new Error(`Ошибка HuggingFace: HTTP ${response.status} ${errText}`);
-      }
-
-      const buf = await altResponse.arrayBuffer();
-      const b64 = Buffer.from(buf).toString("base64");
-      return json({ image: `data:image/jpeg;base64,${b64}` });
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "");
+      console.error("HF Error response:", response.status, errText);
+      return json({ error: `Hugging Face ответил ошибкой (${response.status}): ${errText.slice(0, 150)}` }, { status: response.status });
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const b64 = Buffer.from(arrayBuffer).toString("base64");
+    const resultBase64 = Buffer.from(arrayBuffer).toString("base64");
 
-    return json({ image: `data:image/jpeg;base64,${b64}` });
+    return json({ image: `data:image/jpeg;base64,${resultBase64}` });
 
   } catch (err: any) {
     console.error("AI Generation error:", err);
-    return json({ error: err.message || "Ошибка генерации фотореализма" }, { status: 500 });
+    return json({ error: err.message || "Ошибка соединения с сервисом" }, { status: 500 });
   }
 };
