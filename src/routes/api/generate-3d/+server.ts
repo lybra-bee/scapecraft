@@ -117,7 +117,6 @@ export const GET: RequestHandler = async ({ url }) => {
       if (remoteModelUrl) {
         localModelPath = remoteModelUrl;
       }
-      }
     }
 
     return json({

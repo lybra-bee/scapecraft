@@ -1,10 +1,10 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { env } from '$env/dynamic/private';
+
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
-    const apiKey = env.GEMINI_API_KEY || env.GEMINI_AI_KEY || env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_AI_KEY || process.env.GOOGLE_API_KEY;
     if (!apiKey) {
       return json({ error: 'GEMINI_API_KEY не задан в Environment Variables Vercel' }, { status: 500 });
     }
