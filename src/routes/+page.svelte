@@ -1283,47 +1283,34 @@
     };
 
     
-    takePhotoSnapshot = async () => {
-      if (isRendering4K) return;
-      isRendering4K = true;
-      if (typeof selectionRing !== "undefined") selectionRing.visible = false;
-
+    takePhotoSnapshot = () => {
       try {
+        if (!renderer || !scene || !camera) {
+          alert("3D сцена ещё инициализируется...");
+          return;
+        }
+        if (typeof selectionRing !== "undefined") selectionRing.visible = false;
+        
         renderer.render(scene, camera);
-        const rawDataUrl = renderer.domElement.toDataURL("image/jpeg", 0.98);
-
-        // Скачиваем сразу гарантированный снимок сцены
-        const downloadImg = (dataUri, filename) => {
+        
+        renderer.domElement.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.style.display = "none";
-          a.href = dataUri;
-          a.download = filename;
+          a.href = url;
+          a.download = "aquascape_studio_photo_" + Date.now() + ".jpg";
           document.body.appendChild(a);
           a.click();
-          setTimeout(() => document.body.removeChild(a), 500);
-        };
-
-        // Запускаем скачивание 3D-снимка
-        downloadImg(rawDataUrl, "aquascape_render_" + Date.now() + ".jpg");
-
-        // Фоново запрашиваем ИИ-обработку
-        fetch("/api/enhance-snapshot", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ imageBase64: rawDataUrl })
-        })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (data?.image) {
-            downloadImg(data.image, "aquascape_ai_4k_" + Date.now() + ".jpg");
-          }
-        })
-        .catch(() => {});
-      } catch (err) {
-        console.error("Ошибка при создании снимка:", err);
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 1000);
+        }, "image/jpeg", 0.95);
+      } catch (e) {
+        console.error("Ошибка снимка:", e);
       } finally {
         if (typeof selectionRing !== "undefined") selectionRing.visible = true;
-        isRendering4K = false;
       }
     };
 
@@ -1869,7 +1856,7 @@
     </div>
 
     <!-- ПРАВАЯ ПАНЕЛЬ: ИНСПЕКТОР ОБЪЕКТА -->
-    <div class="right-inspector-panel animate-fade-in" style="top: 270px !important;">
+    <div class="right-inspector-panel animate-fade-in" style="top: 130px !important;">
       <div class="panel-section">
         <div class="flex items-center justify-between">
           <div class="panel-title truncate"><Trees class="w-3.5 h-3.5 text-sky-400 flex-shrink-0" /> {selectedLabel}</div>
