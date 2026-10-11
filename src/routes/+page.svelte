@@ -2187,7 +2187,7 @@
             </div>
           {:else if aiEnhancedImage}
             <div class="w-full h-full flex items-center justify-center p-2">
-              <img src={aiEnhancedImage} alt="AI Aquascape" class="max-w-full max-h-[58vh] object-contain rounded-lg shadow-2xl border border-white/10" />
+              <img src={aiEnhancedImage} alt="AI Aquascape" class="max-w-full max-h-[48vh] md:max-h-[52vh] object-contain rounded-lg shadow-2xl border border-white/10 shrink" />
             </div>
           {/if}
         </div>
@@ -2585,7 +2585,12 @@
     z-index: 9999 !important;
     padding: 16px !important;
   }
-  .modal-box { background: #07192c; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 18px; overflow: hidden; }
+  .modal-box {
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh !important;
+    overflow: hidden !important;
+}
   .modal-header { padding: 14px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: space-between; }
   .modal-footer { padding: 12px 18px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: flex-end; gap: 10px; background: rgba(3, 13, 24, 0.5); }
   .dropzone { border: 2px dashed rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; align-items: center; text-align: center; background: rgba(3, 14, 26, 0.7); cursor: pointer; }
