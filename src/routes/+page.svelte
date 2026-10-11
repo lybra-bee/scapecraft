@@ -2122,7 +2122,7 @@
 
       <button onclick={() => isPassportOpen = true} class="btn-step3-passport">
         <Printer class="w-4 h-4 text-emerald-300" />
-        <span>Паспорт проекта (Печать)</span>
+        <span>Паспорт</span>
       </button>
 
       <button onclick={generateAiAquascape} class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-sky-500 hover:from-purple-500 hover:to-sky-400 text-white shadow-lg shadow-indigo-950/40 transition-all border border-indigo-400/30 cursor-pointer">
@@ -2463,11 +2463,22 @@
 
   /* ШАГ 3: НИЖНЯЯ ПАНЕЛЬ ВИЗУАЛА */
   .step3-bottom-bar {
-    position: absolute; bottom: 20px; left: 40%; transform: translateX(-50%);
-    display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
-    background: rgba(4, 16, 32, 0.94); backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 16px;
-    padding: 10px 16px; z-index: 28; box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    position: fixed;
+    bottom: 24px;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(4, 16, 32, 0.94);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 16px;
+    padding: 8px 12px;
+    z-index: 50;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+    max-width: 96vw;
+    overflow-x: auto;
   }
   .btn-step3 {
     display: flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: 10px;
