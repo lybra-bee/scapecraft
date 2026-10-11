@@ -157,14 +157,14 @@
   let updateBackdropScreen: () => void = () => {};
   let updateLightingMode: () => void = () => {};
   let selectTargetById: (id: string) => void = () => {};
-  let updateTransformFromSliders: () => void = () => {};
-  let deleteSelectedObject: () => void = () => {};
-  let duplicateSelectedObject: () => void = () => {};
-  let mirrorSelectedObject: () => void = () => {};
+  let updateTransformFromSliders = $state<() => void>(() => {});
+  let deleteSelectedObject = $state<() => void>(() => {});
+  let duplicateSelectedObject = $state<() => void>(() => {});
+  let mirrorSelectedObject = $state<() => void>(() => {});
   let addLibraryItem: (itemKey: string) => void = () => {};
   let exportLayoutJson: () => void = () => {};
   let importLayoutJson: (jsonStr: string) => void = () => {};
-  let takePhotoSnapshot: () => void = () => {};
+  let takePhotoSnapshot = $state<() => void>(() => {});
   let loadGlbIntoScene: (url: string, name: string, targetSizeCm?: number, customId?: string) => void = () => {};
   let applyPlantGrowthEffect: () => void = () => {};
 
@@ -2269,11 +2269,21 @@
 
   /* ШАГ 2: ВЕРХНИЙ РЕЖИМ УПРАВЛЕНИЯ */
   .center-mode-bar {
-    position: absolute; top: 80px; left: 40%; transform: translateX(-50%);
-    display: flex; align-items: center; gap: 8px;
-    background: rgba(4, 16, 32, 0.9); backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 12px;
-    padding: 6px 14px; z-index: 28; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    position: fixed;
+    top: 85px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(4, 16, 32, 0.92);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    padding: 6px 14px;
+    z-index: 50;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    cursor: grab;
   }
   .segmented-control {
     display: flex; background: rgba(15, 34, 56, 0.85);
