@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 540" width="100%" height="100%">
+  <defs>
+    <linearGradient id="stemG" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#064e3b"/>
+      <stop offset="60%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#34d399"/>
+    </linearGradient>
+    <radialGradient id="leafSoftG" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#a7f3d0"/>
+      <stop offset="45%" stop-color="#10b981"/>
+      <stop offset="85%" stop-color="#047857"/>
+      <stop offset="100%" stop-color="#064e3b"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Многослойный куст со светотенью и прозрачным фоном -->
+  <g>
+    <!-- Фоновый ярус стеблей -->
+    <path d="M 120,540 Q 110,320 125,90" stroke="#047857" stroke-width="3" fill="none" opacity="0.6"/>
+    <path d="M 220,540 Q 235,310 215,80" stroke="#047857" stroke-width="3" fill="none" opacity="0.6"/>
+    <path d="M 170,540 Q 165,280 170,40" stroke="url(#stemG)" stroke-width="3.5" fill="none"/>
+
+    <!-- Анатомические листья Rotala Green -->
+    <!-- Левый побег -->
+    <path d="M 115,220 C 65,200 45,215 50,225 C 55,235 95,230 115,223 Z" fill="url(#leafSoftG)"/>
+    <path d="M 120,160 C 70,140 55,155 60,165 C 65,175 100,170 120,163 Z" fill="url(#leafSoftG)"/>
+    <path d="M 125,100 C 85,85 70,100 75,108 C 80,116 110,110 125,103 Z" fill="url(#leafSoftG)"/>
+
+    <!-- Центральный побег -->
+    <path d="M 170,380 C 110,360 90,375 95,385 C 100,395 150,390 170,383 Z" fill="url(#leafSoftG)"/>
+    <path d="M 170,380 C 230,360 250,375 245,385 C 240,395 190,390 170,383 Z" fill="url(#leafSoftG)"/>
+    <path d="M 168,310 C 115,290 100,305 105,315 C 110,325 152,320 168,313 Z" fill="url(#leafSoftG)"/>
+    <path d="M 168,310 C 220,290 235,305 230,315 C 225,325 182,320 168,313 Z" fill="url(#leafSoftG)"/>
+    <path d="M 167,240 C 120,220 108,235 112,243 C 116,251 152,248 167,243 Z" fill="url(#leafSoftG)"/>
+    <path d="M 167,240 C 215,220 228,235 222,243 C 218,251 182,248 167,243 Z" fill="url(#leafSoftG)"/>
+    <path d="M 169,170 C 130,152 118,165 122,172 C 126,179 155,176 169,173 Z" fill="url(#leafSoftG)"/>
+    <path d="M 169,170 C 208,152 220,165 216,172 C 212,179 183,176 169,173 Z" fill="url(#leafSoftG)"/>
+    <path d="M 170,100 C 138,85 128,97 132,103 C 136,109 158,106 170,103 Z" fill="url(#leafSoftG)"/>
+    <path d="M 170,100 C 202,85 212,97 208,103 C 204,109 182,106 170,103 Z" fill="url(#leafSoftG)"/>
+    <!-- Верхушечная почка -->
+    <ellipse cx="170" cy="50" rx="14" ry="7" fill="url(#leafSoftG)"/>
+
+    <!-- Правый побег -->
+    <path d="M 220,210 C 270,190 285,205 280,215 C 275,225 240,220 220,213 Z" fill="url(#leafSoftG)"/>
+    <path d="M 218,150 C 265,130 280,145 275,155 C 270,165 238,160 218,153 Z" fill="url(#leafSoftG)"/>
+    <path d="M 215,90 C 255,75 268,90 264,98 C 260,106 230,100 215,93 Z" fill="url(#leafSoftG)"/>
+  </g>
+</svg>
