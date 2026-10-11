@@ -3,113 +3,84 @@ import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GEMINI_AI_KEY || process.env.GOOGLE_API_KEY;
-    if (!apiKey) {
-      return json({ error: "Ключ GEMINI_API_KEY не настроен в переменных окружения Vercel" }, { status: 500 });
+    const hfToken = process.env.HF_ACCESS_TOKEN || process.env.HF_TOKEN;
+    if (!hfToken) {
+      return json({ error: "Переменная HF_ACCESS_TOKEN не настроена на Vercel" }, { status: 500 });
     }
 
     const body = await request.json().catch(() => ({}));
     let rawBase64 = body?.imageBase64 || "";
+
     if (!rawBase64) {
-      return json({ error: "Нет данных изображения" }, { status: 400 });
+      return json({ error: "Нет данных изображения сцены" }, { status: 400 });
     }
 
     if (rawBase64 === "test") return json({ ok: true });
 
-    // Очищаем base64
     if (rawBase64.includes(",")) {
       rawBase64 = rawBase64.split(",")[1];
     }
 
-    const userDetails = body?.sceneDescription || "natural driftwood, stones, aquarium plants";
+    const userDetails = body?.sceneDescription || "aquascape with spider wood and stones";
 
-    // Промпт для ИИ-редактирования изображения на основе 3D-сцены
-    const promptText = `Преврати это 3D-изображение аквариума в высокодетализированную, реалистичную фотографию природного акваскейпа в стиле Такаши Амано.
-    - Полностью сохрани исходную композицию, расположение и формы всех объектов: коряги в центре, камня Сейрю справа, красных растений слева и зеленых справа.
-    - Сделай воду абсолютно прозрачной, наполненной миллиардами микропузырьков CO2.
-    - Добавь естественные, живые текстуры: мокрую кору и мох на ветках, пористую и слоистую структуру камня Сейрю с белыми прожилками, сочные, детальные листья водных растений Rotala.
-    - Добавь стайку неоновых тетр, плывущих в воде.
-    - Установи яркое, профессиональное аквариумное LED-освещение с естественными бликами, тенями и каустикой на грунте.
-    - Все детали должны выглядеть как настоящая съёмка на макрообъектив в 8K.
-    Исключи любые водяные знаки, текст, логотипы, рамки или искажения объектов.`;
+    const promptText = `Award-winning Takashi Amano style nature aquarium studio photograph. Crystal clear optical water filled with tiny CO2 microbubbles, ultra-realistic wet organic textures on the driftwood, porous rough Seiryu stone, fresh vibrant Rotala aquatic plants, vivid neon tetra fish swimming. Exact match to the 3d layout: ${userDetails}. 8k professional studio lighting, low-iron rimless glass tank, sharp focus, no watermarks, no logos, no text.`;
 
-    // Запрос к мультимодальной Gemini API с генерацией изображения (Image-to-Image)
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`;
+    const negativePrompt = "blurry, distorted, bad proportions, watermark, logo, text, cartoon, low quality, artifacts, extra tank borders, shifted composition";
 
-    const res = await fetch(url, {
+    // Прямой Image-to-Image запрос через роутер Hugging Face с вашим токеном
+    const response = await fetch("https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-refiner-1.0", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Authorization": `Bearer ${hfToken}`,
+        "Content-Type": "application/json"
+      },
       signal: AbortSignal.timeout(45000),
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                inlineData: {
-                  mimeType: "image/jpeg",
-                  data: rawBase64
-                }
-              },
-              {
-                text: promptText
-              }
-            ]
-          }
-        ],
-        generationConfig: {
-          responseModalities: ["IMAGE"],
-          candidateCount: 1
+        inputs: rawBase64,
+        parameters: {
+          prompt: promptText,
+          negative_prompt: negativePrompt,
+          strength: 0.5,
+          guidance_scale: 7.5
         }
       })
     });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      // Резервная попытка на случай, если gemini-2.5-flash-image не включена в тарифе, используем gemini-3.1-flash-image
-      console.warn("Попытка 1 не удалась, пробуем gemini-3.1-flash-image...");
-      const fallbackUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${apiKey}`;
-      const resFallback = await fetch(fallbackUrl, {
+    if (!response.ok) {
+      // Резервная модель на случай недоступности первой
+      const altResponse = await fetch("https://api-inference.huggingface.co/models/timbrooks/instruct-pix2pix", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Authorization": `Bearer ${hfToken}`,
+          "Content-Type": "application/json"
+        },
         signal: AbortSignal.timeout(45000),
         body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                { inlineData: { mimeType: "image/jpeg", data: rawBase64 } },
-                { text: promptText }
-              ]
-            }
-          ],
-          generationConfig: {
-            responseModalities: ["IMAGE"],
-            candidateCount: 1
+          inputs: rawBase64,
+          parameters: {
+            prompt: "Make it an award-winning Takashi Amano nature aquarium studio photograph, real water, real plants, real stones",
+            image_guidance_scale: 1.6
           }
         })
       });
 
-      if (!resFallback.ok) {
-        const errFallback = await resFallback.json().catch(() => ({}));
-        return json({ error: errFallback.error?.message || "Ошибка генерации Gemini" }, { status: resFallback.status });
+      if (!altResponse.ok) {
+        const errText = await response.text().catch(() => "");
+        throw new Error(`Ошибка HuggingFace: HTTP ${response.status} ${errText}`);
       }
-      
-      const dataFallback = await resFallback.json();
-      const b64Fallback = dataFallback.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-      if (!b64Fallback) {
-        return json({ error: "Изображение не получено в ответе API" }, { status: 500 });
-      }
-      return json({ image: `data:image/jpeg;base64,${b64Fallback}` });
+
+      const buf = await altResponse.arrayBuffer();
+      const b64 = Buffer.from(buf).toString("base64");
+      return json({ image: `data:image/jpeg;base64,${b64}` });
     }
 
-    const data = await res.json();
-    const b64 = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    if (!b64) {
-      return json({ error: "Изображение не получено в ответе API" }, { status: 500 });
-    }
+    const arrayBuffer = await response.arrayBuffer();
+    const b64 = Buffer.from(arrayBuffer).toString("base64");
 
     return json({ image: `data:image/jpeg;base64,${b64}` });
+
   } catch (err: any) {
-    console.error("Enhance snapshot error:", err);
-    return json({ error: err.message || "Ошибка сервера" }, { status: 500 });
+    console.error("AI Generation error:", err);
+    return json({ error: err.message || "Ошибка генерации фотореализма" }, { status: 500 });
   }
 };
