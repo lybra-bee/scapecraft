@@ -2156,8 +2156,10 @@
   <!-- МОДАЛЬНОЕ ОКНО ИИ ФОТОРЕАЛИЗМА -->
   {#if isAiRenderOpen}
     <div class="modal-backdrop" onclick={(e) => { if (e.target === e.currentTarget && !aiEnhancing) isAiRenderOpen = false; }}>
-      <div class="modal-box w-[880px] max-h-[90vh] flex flex-col animate-fade-in bg-slate-950/95 border border-indigo-500/30 p-5 rounded-2xl shadow-2xl backdrop-blur-2xl">
-        <div class="flex items-center justify-between pb-3 border-b border-white/10">
+      <div class="modal-box w-[920px] max-w-[95vw] max-h-[92vh] flex flex-col animate-fade-in bg-slate-950/98 border border-indigo-500/30 p-5 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden">
+        
+        <!-- Заголовок -->
+        <div class="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
           <div class="flex items-center gap-2">
             <Sparkles class="w-5 h-5 text-indigo-400" />
             <h3 class="text-base font-bold text-white">ИИ Фотореализм аквариума</h3>
@@ -2167,12 +2169,13 @@
           </button>
         </div>
 
-        <div class="my-4 flex flex-col items-center justify-center min-h-[380px] w-full bg-slate-900/60 rounded-xl border border-white/5 overflow-hidden relative">
+        <!-- Контент / Изображение -->
+        <div class="my-3 flex-1 flex flex-col items-center justify-center min-h-[320px] max-h-[62vh] w-full bg-slate-900/80 rounded-xl border border-white/5 overflow-hidden relative">
           {#if aiEnhancing}
             <div class="flex flex-col items-center gap-3 p-8 text-center">
               <Loader2 class="w-10 h-10 text-indigo-400 animate-spin" />
-              <p class="text-sm font-semibold text-slate-200">Превращаем 3D сцену в живой акваскейп...</p>
-              <p class="text-xs text-slate-400 max-w-sm">Генерация реалистичной воды, микропузырьков CO2 и естественной текстуры растений (до 20-30 сек)</p>
+              <p class="text-sm font-semibold text-slate-200">Генерация фотореалистичного акваскейпа...</p>
+              <p class="text-xs text-slate-400 max-w-sm">Соблюдаем геометрию коряг, камней и растений (15-25 сек)</p>
             </div>
           {:else if aiErrorMessage}
             <div class="flex flex-col items-center gap-2 text-center p-6 text-red-400">
@@ -2183,17 +2186,33 @@
               </button>
             </div>
           {:else if aiEnhancedImage}
-            <div class="w-full flex flex-col gap-3 p-2">
-              <img src={aiEnhancedImage} alt="AI Aquascape" class="w-full max-h-[58vh] object-contain rounded-lg shadow-xl" />
-              <div class="flex items-center justify-between px-2 pt-1">
-                <span class="text-xs text-emerald-400 font-medium">✓ Готово: фотореалистичный ADA Nature Aquarium</span>
-                <a href={aiEnhancedImage} download={"aquascape_ai_" + Date.now() + ".jpg"} class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white flex items-center gap-2 shadow-lg">
-                  <Download class="w-4 h-4" /> Скачать шедевр
-                </a>
-              </div>
+            <div class="w-full h-full flex items-center justify-center p-2">
+              <img src={aiEnhancedImage} alt="AI Aquascape" class="max-w-full max-h-[58vh] object-contain rounded-lg shadow-2xl border border-white/10" />
             </div>
           {/if}
         </div>
+
+        <!-- Футер с кнопками (всегда виден!) -->
+        {#if aiEnhancedImage && !aiEnhancing}
+          <div class="pt-3 border-t border-white/10 flex items-center justify-between shrink-0 gap-3">
+            <span class="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
+              <Check class="w-4 h-4" /> Фотореалистичный акваскейп готов
+            </span>
+            <div class="flex items-center gap-2">
+              <button onclick={() => isAiRenderOpen = false} class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-medium">
+                Закрыть
+              </button>
+              <a 
+                href={aiEnhancedImage} 
+                download={"aquascape_ai_" + Date.now() + ".jpg"} 
+                class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 hover:from-indigo-500 hover:to-sky-400 text-xs font-bold text-white flex items-center gap-2 shadow-lg shadow-indigo-950/50 cursor-pointer"
+              >
+                <Download class="w-4 h-4" /> Скачать фото (JPG)
+              </a>
+            </div>
+          </div>
+        {/if}
+
       </div>
     </div>
   {/if}

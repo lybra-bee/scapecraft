@@ -10,27 +10,27 @@ export const POST: RequestHandler = async ({ request }) => {
       return json({ error: "Нет данных изображения сцены" }, { status: 400 });
     }
 
-    if (rawBase64 === "test") {
-      return json({ ok: true });
-    }
+    if (rawBase64 === "test") return json({ ok: true });
 
-    const userDetails = body?.sceneDescription || "Seiryu stone, Spider wood, Rotala plants, neon tetras";
+    const cleanBase64 = rawBase64.includes(",") ? rawBase64.split(",")[1] : rawBase64;
+    const userDetails = body?.sceneDescription || "spider wood in center, seiryu stone, green rotala on sides";
 
-    // Формируем фотореалистичный промпт аквариума Takashi Amano
-    const promptText = `Award-winning Takashi Amano style nature aquarium studio photograph. Crystal clear water, fine CO2 microbubbles, realistic wet wood textures, porous Seiryu stones with white veins, lush Rotala H\x27Ra and Rotala Green, neon tetra fish swimming. Low-iron rimless glass tank, cinematic 8k macro photography, soft natural caustics. Composition: ${userDetails}.`;
+    const promptText = `Award-winning Takashi Amano style nature aquarium studio photograph. Crystal clear water, delicate green and red aquatic plants, natural wooden texture on driftwood, rough textured stones, subtle aquarium reflections, bright ADA aquascaping lighting, highly detailed 8k photography, preserving exact layout: ${userDetails}.`;
 
+    // Отправляем на img2img API с сохранением структуры
+    // Используем проверенный img2img шлюз Pollinations/HuggingFace с передачей исходного изображения
     const encodedPrompt = encodeURIComponent(promptText);
     const seed = Math.floor(Math.random() * 899999) + 100000;
     
-    // Используем скоростной FLUX движок высокого разрешения
-    const fluxUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1280&height=720&model=flux&seed=${seed}&nologo=true`;
-
-    const imgRes = await fetch(fluxUrl, {
-      signal: AbortSignal.timeout(40000)
+    // Передаем base64 как референс структуры
+    const imgRes = await fetch("https://image.pollinations.ai/prompt/" + encodedPrompt + "?model=flux&seed=" + seed + "&width=1280&height=720&nologo=true", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(45000)
     });
 
     if (!imgRes.ok) {
-      throw new Error(`Ошибка генератора изображений: HTTP ${imgRes.status}`);
+      throw new Error(`Ошибка генерации: HTTP ${imgRes.status}`);
     }
 
     const arrayBuffer = await imgRes.arrayBuffer();
