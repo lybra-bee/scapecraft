@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 
-const BACKEND_URL = "https://weak-shrimps-change.loca.lt";
+const BACKEND_URL = "https://red-pans-join.loca.lt";
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
@@ -12,7 +12,6 @@ export const POST: RequestHandler = async ({ request }) => {
       return json({ error: "Нет данных изображения сцены" }, { status: 400 });
     }
 
-    // Отправляем снимок 3D-сцены напрямую в наш Colab GPU сервер
     const res = await fetch(`${BACKEND_URL}/generate`, {
       method: "POST",
       headers: {
@@ -29,13 +28,13 @@ export const POST: RequestHandler = async ({ request }) => {
 
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
-      console.error("Colab backend error:", res.status, errText);
+      console.error("Colab error:", res.status, errText);
       return json({ error: `Ошибка GPU бэкенда (${res.status}): ${errText.slice(0, 160)}` }, { status: res.status });
     }
 
     const data = await res.json();
     if (!data.image) {
-      return json({ error: "Бэкенд не вернул сгенерированное изображение" }, { status: 500 });
+      return json({ error: "Бэкенд не вернул изображение" }, { status: 500 });
     }
 
     return json({ image: data.image });

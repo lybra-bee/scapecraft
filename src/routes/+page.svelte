@@ -116,85 +116,30 @@
     isAiRenderOpen = true;
 
     try {
-      // Ищем WebGL canvas аквариума на странице
       const webglCanvas = document.querySelector("canvas");
       if (!webglCanvas) {
-        throw new Error("Холст 3D сцены не найден на странице");
+        throw new Error("Холст сцены не найден");
       }
 
-      // Получаем кадр высокого разрешения
-      const rawDataUrl = webglCanvas.toDataURL("image/jpeg", 0.98);
+      const snapshotBase64 = webglCanvas.toDataURL("image/jpeg", 0.95);
 
-      // Студийная оптическая обработка ADA
-      const processed = await new Promise<string>((resolve) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          const w = (canvas.width = img.naturalWidth || 1920);
-          const h = (canvas.height = img.naturalHeight || 1080);
-          const ctx = canvas.getContext("2d");
-          if (!ctx) return resolve(rawDataUrl);
-
-          // Базовый рендер
-          ctx.drawImage(img, 0, 0, w, h);
-
-          // Мягкий свет сверху
-          ctx.save();
-          ctx.globalCompositeOperation = "soft-light";
-          const lightGrad = ctx.createLinearGradient(0, 0, 0, h);
-          lightGrad.addColorStop(0, "rgba(255, 255, 255, 0.45)");
-          lightGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.15)");
-          lightGrad.addColorStop(1, "rgba(0, 0, 0, 0.35)");
-          ctx.fillStyle = lightGrad;
-          ctx.fillRect(0, 0, w, h);
-          ctx.restore();
-
-          // Глубокий оттенок зелени
-          ctx.save();
-          ctx.globalCompositeOperation = "color-dodge";
-          const plantGrad = ctx.createRadialGradient(w * 0.5, h * 0.45, w * 0.1, w * 0.5, h * 0.45, w * 0.5);
-          plantGrad.addColorStop(0, "rgba(80, 220, 140, 0.12)");
-          plantGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-          ctx.fillStyle = plantGrad;
-          ctx.fillRect(0, 0, w, h);
-          ctx.restore();
-
-          // Тонкая оптическая каустика
-          ctx.save();
-          ctx.globalCompositeOperation = "overlay";
-          ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
-          ctx.lineWidth = 1.5;
-          for (let i = 0; i < 28; i++) {
-            ctx.beginPath();
-            const y = h * 0.48 + (i * (h * 0.4) / 28);
-            ctx.moveTo(w * 0.1, y);
-            for (let x = w * 0.1; x < w * 0.9; x += 40) {
-              const dy = Math.sin((x + i * 30) * 0.02) * 5;
-              ctx.lineTo(x, y + dy);
-            }
-            ctx.stroke();
-          }
-          ctx.restore();
-
-          // Студийная виньетка
-          ctx.save();
-          const vin = ctx.createRadialGradient(w / 2, h / 2, w * 0.35, w / 2, h / 2, w * 0.75);
-          vin.addColorStop(0, "rgba(0, 0, 0, 0)");
-          vin.addColorStop(1, "rgba(2, 6, 23, 0.35)");
-          ctx.fillStyle = vin;
-          ctx.fillRect(0, 0, w, h);
-          ctx.restore();
-
-          resolve(canvas.toDataURL("image/jpeg", 0.95));
-        };
-        img.onerror = () => resolve(rawDataUrl);
-        img.src = rawDataUrl;
+      const res = await fetch("/api/enhance-snapshot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: snapshotBase64,
+          sceneDescription: "spider wood in center, seiryu stone on right, red and green rotala plants"
+        })
       });
 
-      aiEnhancedImage = processed;
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.image) {
+        throw new Error(data.error || ("Ошибка сервера: " + res.status));
+      }
+
+      aiEnhancedImage = data.image;
     } catch (err: any) {
-      aiErrorMessage = err?.message || "Ошибка рендера кадра";
+      aiErrorMessage = err?.message || "Ошибка генерации фото";
     } finally {
       aiEnhancing = false;
     }
