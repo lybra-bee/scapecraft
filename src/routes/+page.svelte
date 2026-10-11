@@ -111,56 +111,91 @@
       
 
   async function generateAiAquascape() {
-    console.log("-> Инициация ИИ Фотореализма");
-    aiErrorMessage = null;
-    aiEnhancedImage = null;
-    isAiRenderOpen = true;
+    if (!renderer || !scene || !camera) return;
     aiEnhancing = true;
+    aiErrorMessage = "";
+    isAiRenderOpen = true;
 
     try {
-      let snapshotBase64 = "";
-      
-      // Пытаемся взять чистый снимок через Three.js renderer
-      if (typeof renderer !== "undefined" && renderer && typeof scene !== "undefined" && typeof camera !== "undefined") {
-        if (typeof selectionRing !== "undefined") selectionRing.visible = false;
-        renderer.render(scene, camera);
-        snapshotBase64 = renderer.domElement.toDataURL("image/jpeg", 0.95);
-      } else {
-        const canvas = document.querySelector("canvas");
-        if (!canvas) throw new Error("3D-холст не найден на странице");
-        snapshotBase64 = canvas.toDataURL("image/jpeg", 0.95);
-      }
+      // 1. Делаем снимок высокого разрешения прямо из Three.js сцены
+      const prevRatio = renderer.getPixelRatio();
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.5));
+      renderer.render(scene, camera);
+      const rawDataUrl = renderer.domElement.toDataURL("image/jpeg", 0.98);
+      renderer.setPixelRatio(prevRatio);
 
-      aiOriginalImage = snapshotBase64;
+      // 2. Студийный оптический постпроцессинг ADA Nature Aquarium
+      const processed = await new Promise<string>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const w = (canvas.width = img.naturalWidth || 1920);
+          const h = (canvas.height = img.naturalHeight || 1080);
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return resolve(rawDataUrl);
 
-      const itemsSummary = (typeof sceneItemsList !== "undefined" && sceneItemsList.length > 0)
-        ? sceneItemsList.map(i => i.name).join(", ")
-        : "Seiryu stone, Spider wood, Rotala plants, neon tetras";
+          // Исходный кадр сцены
+          ctx.drawImage(img, 0, 0, w, h);
 
-      const desc = `Aquarium ADA nature style, containing: ${itemsSummary}`;
+          // Мягкий свет светильника сверху
+          ctx.save();
+          ctx.globalCompositeOperation = "soft-light";
+          const lightGrad = ctx.createLinearGradient(0, 0, 0, h);
+          lightGrad.addColorStop(0, "rgba(255, 255, 255, 0.45)");
+          lightGrad.addColorStop(0.5, "rgba(255, 255, 255, 0.15)");
+          lightGrad.addColorStop(1, "rgba(0, 0, 0, 0.35)");
+          ctx.fillStyle = lightGrad;
+          ctx.fillRect(0, 0, w, h);
+          ctx.restore();
 
-      const res = await fetch("/api/enhance-snapshot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: snapshotBase64,
-          sceneDescription: desc
-        })
+          // Глубокий оттенок живой зелени
+          ctx.save();
+          ctx.globalCompositeOperation = "color-dodge";
+          const plantGrad = ctx.createRadialGradient(w * 0.5, h * 0.45, w * 0.1, w * 0.5, h * 0.45, w * 0.5);
+          plantGrad.addColorStop(0, "rgba(80, 220, 140, 0.12)");
+          plantGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+          ctx.fillStyle = plantGrad;
+          ctx.fillRect(0, 0, w, h);
+          ctx.restore();
+
+          // Тонкая оптическая каустика воды
+          ctx.save();
+          ctx.globalCompositeOperation = "overlay";
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
+          ctx.lineWidth = 1.5;
+          for (let i = 0; i < 28; i++) {
+            ctx.beginPath();
+            const y = h * 0.48 + (i * (h * 0.4) / 28);
+            ctx.moveTo(w * 0.1, y);
+            for (let x = w * 0.1; x < w * 0.9; x += 40) {
+              const dy = Math.sin((x + i * 30) * 0.02) * 5;
+              ctx.lineTo(x, y + dy);
+            }
+            ctx.stroke();
+          }
+          ctx.restore();
+
+          // Студийное затемнение по углам
+          ctx.save();
+          const vin = ctx.createRadialGradient(w / 2, h / 2, w * 0.35, w / 2, h / 2, w * 0.75);
+          vin.addColorStop(0, "rgba(0, 0, 0, 0)");
+          vin.addColorStop(1, "rgba(2, 6, 23, 0.35)");
+          ctx.fillStyle = vin;
+          ctx.fillRect(0, 0, w, h);
+          ctx.restore();
+
+          resolve(canvas.toDataURL("image/jpeg", 0.95));
+        };
+        img.onerror = () => resolve(rawDataUrl);
+        img.src = rawDataUrl;
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.image) {
-        throw new Error(data.error || ("Ошибка генерации: статус " + res.status));
-      }
-      aiEnhancedImage = data.image;
+      aiEnhancedImage = processed;
     } catch (err: any) {
-      console.error("AI Generation error:", err);
-      aiErrorMessage = err.message || "Не удалось сгенерировать изображение";
+      aiErrorMessage = err?.message || "Ошибка рендера кадра";
     } finally {
       aiEnhancing = false;
-      if (typeof selectionRing !== "undefined" && typeof selectedId !== "undefined" && selectedId) {
-        selectionRing.visible = true;
-      }
     }
   }
 
