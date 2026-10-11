@@ -1612,6 +1612,77 @@
       rebuildGeometry();
     }
   });
+
+  // --- ГЛОБАЛЬНЫЙ ДЕЛЕГИРОВАННЫЙ DRAG ДЛЯ ВСЕХ ПАНЕЛЕЙ ---
+  $effect(() => {
+    let activeEl: HTMLElement | null = null;
+    let startX = 0, startY = 0;
+    let initialLeft = 0, initialTop = 0;
+
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target) return;
+
+      // Игнорируем клики по кнопкам, ползункам, инпутам и скролл-списку
+      if (target.closest("button, input, select, textarea, .range-slider, .left-cards-scroll, a")) return;
+
+      // Ищем ближайшую панель
+      const panel = target.closest(".center-mode-bar, .left-library-drawer, .right-inspector-panel") as HTMLElement;
+      if (!panel) return;
+
+      activeEl = panel;
+      activeEl.style.userSelect = "none";
+      const rect = activeEl.getBoundingClientRect();
+
+      // Фиксируем координаты и убираем мешающие css-свойства
+      activeEl.style.position = "fixed";
+      activeEl.style.right = "auto";
+      activeEl.style.bottom = "auto";
+      activeEl.style.transform = "none";
+      activeEl.style.left = rect.left + "px";
+      activeEl.style.top = rect.top + "px";
+      activeEl.style.zIndex = "100";
+
+      startX = e.clientX;
+      startY = e.clientY;
+      initialLeft = rect.left;
+      initialTop = rect.top;
+
+      try {
+        activeEl.setPointerCapture(e.pointerId);
+      } catch (_) {}
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!activeEl) return;
+      e.preventDefault();
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      activeEl.style.left = (initialLeft + dx) + "px";
+      activeEl.style.top = (initialTop + dy) + "px";
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (!activeEl) return;
+      try {
+        activeEl.releasePointerCapture(e.pointerId);
+      } catch (_) {}
+      activeEl = null;
+    };
+
+    window.addEventListener("pointerdown", onPointerDown, { capture: true });
+    window.addEventListener("pointermove", onPointerMove, { capture: true });
+    window.addEventListener("pointerup", onPointerUp, { capture: true });
+    window.addEventListener("pointercancel", onPointerUp, { capture: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown, { capture: true });
+      window.removeEventListener("pointermove", onPointerMove, { capture: true });
+      window.removeEventListener("pointerup", onPointerUp, { capture: true });
+      window.removeEventListener("pointercancel", onPointerUp, { capture: true });
+    };
+  });
+
 </script>
 
 <input type="file" accept=".glb,.gltf" bind:this={fileInputDom} onchange={(e) => {
