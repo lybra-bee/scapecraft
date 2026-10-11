@@ -1293,7 +1293,7 @@
         baseScale = 0.9;
       }
 
-      const newId = `asset_${Date.now()}`;
+      const newId = `asset_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       wrapper.userData = {
         id: newId,
         name: name,
@@ -1319,28 +1319,44 @@
     };
 
     
-        takePhotoSnapshot = () => {
+            takePhotoSnapshot = () => {
       try {
-        if (!renderer || !scene || !camera) {
-          alert("3D сцена загружается...");
-          return;
-        }
+        if (!renderer || !scene || !camera) return;
+        
+        // Скрываем маркер выделения перед снимком
         if (typeof selectionRing !== "undefined") selectionRing.visible = false;
+
+        const origW = renderer.domElement.width;
+        const origH = renderer.domElement.height;
+        const origAspect = camera.aspect;
+
+        // Рендерим в честном 4K UHD разрешении (3840x2160)
+        const targetW = 3840;
+        const targetH = 2160;
         
+        camera.aspect = targetW / targetH;
+        camera.updateProjectionMatrix();
+        renderer.setSize(targetW, targetH, false);
+
         renderer.render(scene, camera);
-        
-        const dataUrl = renderer.domElement.toDataURL("image/jpeg", 0.95);
+
+        const dataUrl = renderer.domElement.toDataURL("image/jpeg", 0.98);
         const link = document.createElement("a");
-        link.download = "aquascape_studio_4k_" + Date.now() + ".jpg";
+        link.download = "aquascape_studio_4K_" + Date.now() + ".jpg";
         link.href = dataUrl;
         document.body.appendChild(link);
         link.click();
-        setTimeout(() => document.body.removeChild(link), 300);
+        setTimeout(() => document.body.removeChild(link), 500);
+
+        // Возвращаем исходные размеры вьюпорта
+        camera.aspect = origAspect;
+        camera.updateProjectionMatrix();
+        renderer.setSize(containerElement!.clientWidth, containerElement!.clientHeight, false);
+        renderer.render(scene, camera);
       } catch (err) {
-        console.error("Snapshot error:", err);
-        alert("Ошибка создания снимка: " + err.message);
+        console.error("4K Snapshot error:", err);
       } finally {
-        if (typeof selectionRing !== "undefined") selectionRing.visible = true;
+        if (typeof selectionRing !== "undefined" && selectedId) selectionRing.visible = true;
       }
     };
 
@@ -1504,9 +1520,22 @@
       const hits = raycaster.intersectObjects(interactiveObjects, true);
 
       if (hits.length > 0) {
-        let top: any = hits[0].object;
-        while (top.parent && top.parent !== tankGroup) top = top.parent;
-        if (top.userData?.id) selectTargetById(top.userData.id);
+        // Находим именно тот объект, который зарегистрирован в interactiveObjects
+        let matchedObj: any = null;
+        for (const hit of hits) {
+          let curr: any = hit.object;
+          while (curr && curr !== tankGroup) {
+            if (interactiveObjects.includes(curr)) {
+              matchedObj = curr;
+              break;
+            }
+            curr = curr.parent;
+          }
+          if (matchedObj) break;
+        }
+        if (matchedObj && matchedObj.userData?.id) {
+          selectTargetById(matchedObj.userData.id);
+        }
 
         orbit.enabled = false;
         const currentObj = getSelectedGroup();
@@ -1748,16 +1777,7 @@
       <button onclick={exportLayoutJson} class="btn-top-glass" title="Сохранить проект в JSON"><Save class="w-3.5 h-3.5 text-emerald-400" /></button>
       <button onclick={() => jsonInputDom?.click()} class="btn-top-glass" title="Открыть проект"><FolderOpen class="w-3.5 h-3.5 text-amber-400" /></button>
       <button onclick={() => resetCameraFn?.()} class="btn-top-glass" title="Сброс камеры"><RotateCcw class="w-3.5 h-3.5 text-slate-300" /></button>
-      <button onclick={() => {
-        const canvas = document.querySelector("canvas");
-        if (!canvas) { alert("3D холст не найден"); return; }
-        const a = document.createElement("a");
-        a.download = "aquascape_studio_" + Date.now() + ".jpg";
-        a.href = canvas.toDataURL("image/jpeg", 0.95);
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      }} class="btn-top-glass text-sky-400 hover:text-sky-300" title="Сделать снимок 4K"><Download class="w-3.5 h-3.5" /></button>
+      <button onclick={() => takePhotoSnapshot?.()} class="btn-top-glass text-sky-400 hover:text-sky-300" title="Сделать снимок 4K"><Download class="w-3.5 h-3.5" /></button>
     </div>
   </header>
 
