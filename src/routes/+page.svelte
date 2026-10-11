@@ -2591,31 +2591,8 @@
 .modal-backdrop { }
   .modal-box { }
 
-  .modal-backdrop {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(3, 7, 18, 0.92) !important;
-    backdrop-filter: blur(16px) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    z-index: 99999 !important;
-    padding: 16px !important;
-  }
-  .modal-box {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 900px !important;
-    max-width: 95vw !important;
-    height: auto !important;
-    max-height: 85vh !important; /* Принудительно ограничиваем высоту */
-    background: #020617 !important;
-    border: 1px solid rgba(99, 102, 241, 0.4) !important;
-    padding: 16px 20px !important;
-    border-radius: 16px !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
-    overflow: hidden !important; /* Убираем выход контента наружу */
-  }
+  .modal-backdrop { }
+  .modal-box { }
   .modal-image-container {
     flex: 1 1 auto !important;
     display: flex !important;
@@ -2633,6 +2610,51 @@
     max-width: 100% !important;
     max-height: 100% !important;
     object-contain: contain !important;
+    border-radius: 8px !important;
+  }
+
+
+  .modal-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(3, 7, 18, 0.94) !important;
+    backdrop-filter: blur(16px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 99999 !important;
+    padding: 16px !important;
+  }
+  .modal-box {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 900px !important;
+    max-width: 95vw !important;
+    max-height: 85vh !important; /* Строго ограничиваем высоту */
+    background: #020617 !important;
+    border: 1px solid rgba(99, 102, 241, 0.4) !important;
+    padding: 16px 20px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
+    overflow: hidden !important;
+  }
+  .modal-image-container {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 200px !important;
+    max-height: 52vh !important; /* Ограничиваем высоту контейнера картинки */
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    overflow: hidden !important;
+    margin: 12px 0 !important;
+  }
+  .modal-image-container img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important; /* Картинка сжимается под контейнер */
     border-radius: 8px !important;
   }
 
