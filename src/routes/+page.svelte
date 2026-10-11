@@ -2187,7 +2187,7 @@
             </div>
           {:else if aiEnhancedImage}
             <div class="w-full h-full flex items-center justify-center p-2">
-              <img src={aiEnhancedImage} alt="AI Aquascape" class="max-w-full max-h-[48vh] md:max-h-[52vh] object-contain rounded-lg shadow-2xl border border-white/10 shrink" />
+              <img src={aiEnhancedImage} alt="AI Aquascape" class="max-w-full max-h-[40vh] md:max-h-[46vh] object-contain rounded-lg shadow-2xl border border-white/10 shrink-0 block mx-auto" />
             </div>
           {/if}
         </div>
@@ -2574,23 +2574,8 @@
   .f-bottom-left { left: 38.2%; top: 61.8%; }
   .f-bottom-right { left: 61.8%; top: 61.8%; }
 
-  .modal-backdrop {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(2, 6, 23, 0.85) !important;
-    backdrop-filter: blur(12px) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    z-index: 9999 !important;
-    padding: 16px !important;
-  }
-  .modal-box {
-    display: flex;
-    flex-direction: column;
-    max-height: 85vh !important;
-    overflow: hidden !important;
-}
+  .modal-backdrop { }
+  .modal-box { }
   .modal-header { padding: 14px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: space-between; }
   .modal-footer { padding: 12px 18px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: flex-end; gap: 10px; background: rgba(3, 13, 24, 0.5); }
   .dropzone { border: 2px dashed rgba(255, 255, 255, 0.25); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; align-items: center; text-align: center; background: rgba(3, 14, 26, 0.7); cursor: pointer; }
@@ -2605,4 +2590,28 @@
 
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   .animate-fade-in { animation: fadeIn 0.2s ease-out forwards; }
+.modal-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(4, 8, 20, 0.9) !important;
+    backdrop-filter: blur(12px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 99999 !important;
+    padding: 12px !important;
+  }
+  .modal-box {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 900px !important;
+    max-width: 94vw !important;
+    max-height: 88vh !important; /* Гарантия удержания в пределах экрана */
+    background: rgba(4, 10, 24, 0.98) !important;
+    border: 1px solid rgba(99, 102, 241, 0.4) !important;
+    padding: 16px 20px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8) !important;
+    overflow: hidden !important; /* Убираем выход контента за рамки */
+  }
 </style>
