@@ -3,7 +3,6 @@ import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
-    const hfToken = process.env.HF_ACCESS_TOKEN || process.env.HF_TOKEN;
     const body = await request.json().catch(() => ({}));
     let rawBase64 = body?.imageBase64 || "";
 
@@ -17,42 +16,32 @@ export const POST: RequestHandler = async ({ request }) => {
       rawBase64 = rawBase64.split(",")[1];
     }
 
-    const userDetails = body?.sceneDescription || "spider wood in center, seiryu stone, rotala plants";
+    const userDetails = body?.sceneDescription || "spider wood in center, seiryu stone on right, red and green rotala plants";
 
-    // Промпт для фотореализма с сохранением компоновки
-    const promptText = `Award-winning Takashi Amano style nature aquarium studio photograph. Crystal clear water with tiny CO2 microbubbles, ultra-realistic wet mossy driftwood in center, textured grey Seiryu stone on right, red and green Rotala bushes on sides. Low-iron rimless glass tank, 8k cinematic macro photography, exact match: ${userDetails}. No text, no watermark, no logos.`;
+    // Строгий промпт Takashi Amano с точным описанием позиций из вашей сцены
+    const promptText = `Award-winning Takashi Amano style nature aquarium studio photograph. Crystal clear water, fine CO2 microbubbles, realistic wet wood textures on the central spider wood, porous textured Seiryu stone on the right, lush red Rotala bushes on the left and bright green Rotala on the right, small school of neon tetra fish swimming. Low-iron rimless glass tank, cinematic 8k macro photography, soft natural caustics. Composition layout: ${userDetails}. Studio ADA aquarium photo, highly detailed nature aquascape, no logos, no watermarks, no text, clean borders.`;
 
-    // Попытка через новый Router HuggingFace (FLUX.1-schnell с официальным токеном)
-    if (hfToken) {
-      try {
-        const hfRes = await fetch("https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${hfToken}`,
-            "Content-Type": "application/json"
-          },
-          signal: AbortSignal.timeout(15000),
-          body: JSON.stringify({
-            inputs: promptText,
-            parameters: { num_inference_steps: 4 }
-          })
-        });
+    const encodedPrompt = encodeURIComponent(promptText);
+    const seed = Math.floor(Math.random() * 899999) + 100000;
 
-        if (hfRes.ok) {
-          const arrayBuf = await hfRes.arrayBuffer();
-          const b64 = Buffer.from(arrayBuf).toString("base64");
-          return json({ image: `data:image/jpeg;base64,${b64}`, method: "huggingface" });
-        }
-      } catch (e) {
-        console.warn("HuggingFace Router недоступен или превысил лимит времени:", e);
-      }
+    // Запрашиваем через скоростной FLUX без наложения логотипов (&nologo=true)
+    const renderUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1280&height=720&model=flux&seed=${seed}&nologo=true&enhance=false`;
+
+    const imgRes = await fetch(renderUrl, {
+      signal: AbortSignal.timeout(35000)
+    });
+
+    if (!imgRes.ok) {
+      throw new Error(`Ошибка генератора: HTTP ${imgRes.status}`);
     }
 
-    // Если удаленный сервер не ответил вовремя — сообщаем клиенту применить локальный Photorealism Canvas
-    return json({ fallbackToClient: true, original: `data:image/jpeg;base64,${rawBase64}` });
+    const arrayBuffer = await imgRes.arrayBuffer();
+    const b64 = Buffer.from(arrayBuffer).toString("base64");
+
+    return json({ image: `data:image/jpeg;base64,${b64}` });
 
   } catch (err: any) {
     console.error("AI Generation error:", err);
-    return json({ fallbackToClient: true });
+    return json({ error: err.message || "Ошибка генерации фотореализма" }, { status: 500 });
   }
 };
