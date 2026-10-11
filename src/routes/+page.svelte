@@ -2163,7 +2163,7 @@
         <div class="flex items-center justify-between pb-2 border-b border-white/10 shrink-0">
           <div class="flex items-center gap-2">
             <Sparkles class="w-5 h-5 text-indigo-400" />
-            <h3 class="text-base font-bold text-white">ИИ Фотореализм аквариума</h3>
+            <h3 class="text-base font-bold text-white">Студийный Фоторендер ADA</h3>
           </div>
           <button onclick={() => isAiRenderOpen = false} disabled={aiEnhancing} class="text-slate-400 hover:text-white p-1 rounded-lg">
             <X class="w-5 h-5" />
