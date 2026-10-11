@@ -111,20 +111,21 @@
       
 
   async function generateAiAquascape() {
-    if (!renderer || !scene || !camera) return;
     aiEnhancing = true;
     aiErrorMessage = "";
     isAiRenderOpen = true;
 
     try {
-      // 1. Делаем снимок высокого разрешения прямо из Three.js сцены
-      const prevRatio = renderer.getPixelRatio();
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2.5));
-      renderer.render(scene, camera);
-      const rawDataUrl = renderer.domElement.toDataURL("image/jpeg", 0.98);
-      renderer.setPixelRatio(prevRatio);
+      // Ищем WebGL canvas аквариума на странице
+      const webglCanvas = document.querySelector("canvas");
+      if (!webglCanvas) {
+        throw new Error("Холст 3D сцены не найден на странице");
+      }
 
-      // 2. Студийный оптический постпроцессинг ADA Nature Aquarium
+      // Получаем кадр высокого разрешения
+      const rawDataUrl = webglCanvas.toDataURL("image/jpeg", 0.98);
+
+      // Студийная оптическая обработка ADA
       const processed = await new Promise<string>((resolve) => {
         const img = new Image();
         img.crossOrigin = "anonymous";
@@ -135,10 +136,10 @@
           const ctx = canvas.getContext("2d");
           if (!ctx) return resolve(rawDataUrl);
 
-          // Исходный кадр сцены
+          // Базовый рендер
           ctx.drawImage(img, 0, 0, w, h);
 
-          // Мягкий свет светильника сверху
+          // Мягкий свет сверху
           ctx.save();
           ctx.globalCompositeOperation = "soft-light";
           const lightGrad = ctx.createLinearGradient(0, 0, 0, h);
@@ -149,7 +150,7 @@
           ctx.fillRect(0, 0, w, h);
           ctx.restore();
 
-          // Глубокий оттенок живой зелени
+          // Глубокий оттенок зелени
           ctx.save();
           ctx.globalCompositeOperation = "color-dodge";
           const plantGrad = ctx.createRadialGradient(w * 0.5, h * 0.45, w * 0.1, w * 0.5, h * 0.45, w * 0.5);
@@ -159,7 +160,7 @@
           ctx.fillRect(0, 0, w, h);
           ctx.restore();
 
-          // Тонкая оптическая каустика воды
+          // Тонкая оптическая каустика
           ctx.save();
           ctx.globalCompositeOperation = "overlay";
           ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
@@ -176,7 +177,7 @@
           }
           ctx.restore();
 
-          // Студийное затемнение по углам
+          // Студийная виньетка
           ctx.save();
           const vin = ctx.createRadialGradient(w / 2, h / 2, w * 0.35, w / 2, h / 2, w * 0.75);
           vin.addColorStop(0, "rgba(0, 0, 0, 0)");
