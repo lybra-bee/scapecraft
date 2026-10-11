@@ -108,21 +108,34 @@
   let aiOriginalImage = $state<string | null>(null);
   let aiErrorMessage = $state<string | null>(null);
 
-  async function generateAiAquascape() {
-    try {
-      if (!renderer || !scene || !camera) return;
-      aiErrorMessage = null;
-      aiEnhancing = true;
-      isAiRenderOpen = true;
+    async function generateAiAquascape() {
+    console.log("-> Инициация ИИ Фотореализма");
+    aiErrorMessage = null;
+    aiEnhancedImage = null;
+    isAiRenderOpen = true;
+    aiEnhancing = true;
 
-      if (typeof selectionRing !== "undefined") selectionRing.visible = false;
-      renderer.render(scene, camera);
-      const snapshotBase64 = renderer.domElement.toDataURL("image/jpeg", 0.95);
+    try {
+      let snapshotBase64 = "";
+      
+      // Пытаемся взять чистый снимок через Three.js renderer
+      if (typeof renderer !== "undefined" && renderer && typeof scene !== "undefined" && typeof camera !== "undefined") {
+        if (typeof selectionRing !== "undefined") selectionRing.visible = false;
+        renderer.render(scene, camera);
+        snapshotBase64 = renderer.domElement.toDataURL("image/jpeg", 0.95);
+      } else {
+        const canvas = document.querySelector("canvas");
+        if (!canvas) throw new Error("3D-холст не найден на странице");
+        snapshotBase64 = canvas.toDataURL("image/jpeg", 0.95);
+      }
+
       aiOriginalImage = snapshotBase64;
 
-      // Формируем список присутствующих материалов для промпта
-      const itemsSummary = sceneItemsList.map(i => i.name).join(", ");
-      const desc = itemsSummary ? `Aquarium contains: ${itemsSummary}` : "Nature ADA style aquascape";
+      const itemsSummary = (typeof sceneItemsList !== "undefined" && sceneItemsList.length > 0)
+        ? sceneItemsList.map(i => i.name).join(", ")
+        : "Seiryu stone, Spider wood, Rotala plants, neon tetras";
+
+      const desc = `Aquarium ADA nature style, containing: ${itemsSummary}`;
 
       const res = await fetch("/api/enhance-snapshot", {
         method: "POST",
@@ -135,7 +148,7 @@
 
       const data = await res.json();
       if (!res.ok || data.error) {
-        throw new Error(data.error || "Ошибка генерации изображения");
+        throw new Error(data.error || ("Сервер вернул статус " + res.status));
       }
 
       aiEnhancedImage = data.image;
@@ -144,7 +157,9 @@
       aiErrorMessage = err.message || "Не удалось сгенерировать изображение";
     } finally {
       aiEnhancing = false;
-      if (typeof selectionRing !== "undefined" && selectedId) selectionRing.visible = true;
+      if (typeof selectionRing !== "undefined" && typeof selectedId !== "undefined" && selectedId) {
+        selectionRing.visible = true;
+      }
     }
   }
 
@@ -2541,8 +2556,15 @@
   .f-bottom-right { left: 61.8%; top: 61.8%; }
 
   .modal-backdrop {
-    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px);
-    display: flex; align-items: center; justify-content: center; z-index: 100;
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(2, 6, 23, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important;
+    padding: 16px !important;
   }
   .modal-box { background: #07192c; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 18px; overflow: hidden; }
   .modal-header { padding: 14px 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: space-between; }
