@@ -115,24 +115,8 @@ export const GET: RequestHandler = async ({ url }) => {
     if (task.status === 'success') {
       const remoteModelUrl = task.output?.pbr_model || task.output?.model || task.result?.pbr_model?.url;
       if (remoteModelUrl) {
-        const modelsDir = path.resolve('static/models');
-        await fs.mkdir(modelsDir, { recursive: true });
-        const localFilePath = path.join(modelsDir, `model_${taskId}.glb`);
-
-        try {
-          const stats = await fs.stat(localFilePath);
-          if (stats.size > 10000) {
-            localModelPath = `/models/model_${taskId}.glb`;
-          } else {
-            throw new Error('Файл поврежден');
-          }
-        } catch {
-          console.log(`[Tripo3D] Скачивание модели: model_${taskId}.glb...`);
-          const proxiedUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(remoteModelUrl)}`;
-          await execFileAsync('curl', ['-s', '-L', '--max-time', '45', '-o', localFilePath, proxiedUrl]);
-          localModelPath = `/models/model_${taskId}.glb`;
-          console.log('[Tripo3D] Модель успешно сохранена локально!');
-        }
+        localModelPath = remoteModelUrl;
+      }
       }
     }
 
