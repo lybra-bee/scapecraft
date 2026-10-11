@@ -2165,7 +2165,7 @@
 
   /* ШАГ 2: ВЕРХНИЙ РЕЖИМ УПРАВЛЕНИЯ */
   .center-mode-bar {
-    position: absolute; top: 68px; left: 50%; transform: translateX(-50%);
+    position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
     display: flex; align-items: center; gap: 8px;
     background: rgba(4, 16, 32, 0.9); backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 12px;
@@ -2196,7 +2196,7 @@
 
   /* ШАГ 2: ЛЕВАЯ ВЕРТИКАЛЬНАЯ БИБЛИОТЕКА (CAD DOCK) */
   .left-library-drawer {
-    position: absolute; top: 68px; left: 16px; bottom: 16px; width: 230px;
+    position: absolute; top: 110px; left: 16px; bottom: 16px; width: 230px;
     background: rgba(4, 16, 32, 0.94); backdrop-filter: blur(24px);
     border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 16px;
     padding: 12px; display: flex; flex-direction: column; gap: 8px;
@@ -2223,7 +2223,7 @@
 
   /* ШАГ 2: ПРАВАЯ ПАНЕЛЬ ИНСПЕКТОРА */
   .right-inspector-panel {
-    position: absolute; top: 68px; right: 16px; width: 280px;
+    position: absolute; top: 110px; right: 16px; width: 280px;
     background: rgba(4, 16, 32, 0.92); backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 16px;
     padding: 14px; display: flex; flex-direction: column; gap: 10px; z-index: 25;
