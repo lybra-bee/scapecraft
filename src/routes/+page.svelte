@@ -58,6 +58,42 @@
   let plantGrowthDays = $state(1);
   let isRendering4K = $state(false);
 
+  function makeDraggable(node: HTMLElement) {
+    let x = 0, y = 0, startX = 0, startY = 0;
+    
+    const onMouseDown = (e: MouseEvent) => {
+      // Не инициируем drag при кликах на кнопки, ползунки, скроллбары и инпуты
+      const target = e.target as HTMLElement;
+      if (target.closest("button, input, select, textarea, .range-slider, .left-cards-scroll")) return;
+      
+      e.preventDefault();
+      startX = e.clientX - x;
+      startY = e.clientY - y;
+      
+      const onMouseMove = (ev: MouseEvent) => {
+        x = ev.clientX - startX;
+        y = ev.clientY - startY;
+        node.style.transform = `translate(${x}px, ${y}px)`;
+      };
+      
+      const onMouseUp = () => {
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+      };
+      
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    };
+
+    node.addEventListener("mousedown", onMouseDown);
+    return {
+      destroy() {
+        node.removeEventListener("mousedown", onMouseDown);
+      }
+    };
+  }
+
+
   type BgTheme = 'ada-sky' | 'deep-ocean' | 'mist-white' | 'dark-nature';
   let bgTheme = $state<BgTheme>('ada-sky');
 
@@ -1742,7 +1778,7 @@
   <!-- ========================================================================= -->
   {#if currentStep === 2}
     <!-- Тулбар режимов манипулятора по центру вверху -->
-    <div class="center-mode-bar animate-fade-in">
+    <div use:makeDraggable class="center-mode-bar select-none cursor-move animate-fade-in">
       <div class="segmented-control">
         <button onclick={() => actionMode = 'drag'} class="seg-btn {actionMode === 'drag' ? 'seg-active-drag' : ''}">
           <Move3d class="w-3.5 h-3.5" />
@@ -1766,7 +1802,7 @@
     </div>
 
     <!-- ЛЕВАЯ ПАНЕЛЬ: БИБЛИОТЕКА АССЕТОВ (НЕ ПЕРЕКРЫВАЕТ НИЧЕГО!) -->
-    <div class="left-library-drawer animate-fade-in">
+    <div use:makeDraggable class="left-library-drawer select-none animate-fade-in">
       <div class="dock-header">
         <span class="font-bold text-xs text-white uppercase tracking-wider">Каталог моделей</span>
       </div>
@@ -1859,7 +1895,7 @@
     </div>
 
     <!-- ПРАВАЯ ПАНЕЛЬ: ИНСПЕКТОР ОБЪЕКТА -->
-    <div class="right-inspector-panel animate-fade-in" style="top: 130px !important;">
+    <div use:makeDraggable class="right-inspector-panel select-none animate-fade-in" style="top: 130px !important;">
       <div class="panel-section">
         <div class="flex items-center justify-between">
           <div class="panel-title truncate"><Trees class="w-3.5 h-3.5 text-sky-400 flex-shrink-0" /> {selectedLabel}</div>
@@ -2199,7 +2235,7 @@
     padding: 12px; display: flex; flex-direction: column; gap: 8px;
     z-index: 28; box-shadow: 0 15px 40px rgba(0,0,0,0.6);
   }
-  .dock-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 6px; }
+  .dock-header { cursor: move; user-select: none;  display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 6px; }
   .lib-category-tabs { display: flex; gap: 3px; background: rgba(15, 34, 56, 0.7); padding: 2px; border-radius: 8px; }
   .lib-cat-btn {
     flex: 1; padding: 4px 6px; border-radius: 6px; font-size: 10px; font-weight: 700;
@@ -2264,7 +2300,7 @@
 
   .panel-section { border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 8px; }
   .panel-section:last-child { border-bottom: none; padding-bottom: 0; }
-  .panel-title { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #e2e8f0; }
+  .panel-title { cursor: move; user-select: none;  display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #e2e8f0; }
 
   .shape-btn {
     padding: 5px 3px; border-radius: 6px; background: rgba(56, 189, 248, 0.08);
