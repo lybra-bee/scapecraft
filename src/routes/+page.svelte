@@ -123,7 +123,7 @@
 
       const snapshotBase64 = webglCanvas.toDataURL("image/jpeg", 0.95);
 
-      const res = await fetch("https://yale-witch-baptist-sorts.trycloudflare.com/generate", {
+      const res = await fetch("https://faced-proceed-hitachi-scientist.trycloudflare.com/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
