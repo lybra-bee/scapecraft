@@ -1,7 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 
-const BACKEND_URL = "https://definitions-ghz-believe-replacing.trycloudflare.com";
+const BACKEND_URL = "https://areas-knives-emacs-began.trycloudflare.com";
 
 export const POST: RequestHandler = async ({ request }) => {
   try {
