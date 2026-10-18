@@ -123,8 +123,8 @@
 
       const snapshotBase64 = webglCanvas.toDataURL("image/jpeg", 0.95);
 
-      const res = await const backendHost = (await getDynamicBackendUrl()) || "https://mod-lab-subscriptions-realm.trycloudflare.com";
-        const res = await fetch(`${backendHost}/generate`, {
+      const backendHost = (await getDynamicBackendUrl()) || "https://mod-lab-subscriptions-realm.trycloudflare.com";
+      const res = await fetch(`${backendHost}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
