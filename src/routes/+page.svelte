@@ -123,6 +123,25 @@
 
       const snapshotBase64 = webglCanvas.toDataURL("image/jpeg", 0.95);
 
+  async function getDynamicBackendUrl(): Promise<string | null> {
+    try {
+      if (typeof supabase !== "undefined" && supabase) {
+        const { data, error } = await supabase
+          .from("app_config")
+          .select("value")
+          .eq("key", "backend_url")
+          .single();
+        if (!error && data?.value) {
+          return data.value.replace(/\/$/, "");
+        }
+      }
+    } catch (e) {
+      console.warn("Не удалось получить URL из Supabase:", e);
+    }
+    return null;
+  }
+
+
       const backendHost = (await getDynamicBackendUrl()) || "https://mod-lab-subscriptions-realm.trycloudflare.com";
       const res = await fetch(`${backendHost}/generate`, {
         method: "POST",
