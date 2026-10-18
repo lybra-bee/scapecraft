@@ -112,10 +112,26 @@
 
   async function generateAiAquascape() {
     aiEnhancing = true;
+        let backendHost = "";
     aiErrorMessage = "";
     isAiRenderOpen = true;
 
     try {
+      const webglCanvas = document.querySelector("canvas");
+      if (!webglCanvas) {
+        throw new Error("Холст сцены не найден");
+      }
+
+      const snapshotBase64 = webglCanvas.toDataURL("image/jpeg", 0.95);
+
+      const dynamicUrl = await getDynamicBackendUrl();
+      backendHost = dynamicUrl || "";
+
+      if (!backendHost) {
+        throw new Error("URL бэкенда не найден в базе данных Supabase (таблица app_config пуста)");
+      }
+
+      const res = await fetch(`${backendHost}/generate`
       const webglCanvas = document.querySelector("canvas");
       if (!webglCanvas) {
         throw new Error("Холст сцены не найден");
@@ -142,7 +158,7 @@
   }
 
 
-      const backendHost = (await getDynamicBackendUrl()) || "https://mod-lab-subscriptions-realm.trycloudflare.com";
+      
       const res = await fetch(`${backendHost}/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
