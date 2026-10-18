@@ -159,7 +159,7 @@
 
       aiEnhancedImage = data.image;
     } catch (err: any) {
-      aiErrorMessage = err?.message || "Ошибка генерации фото";
+      aiErrorMessage = (err?.message || "Ошибка генерации") + " (URL: " + (typeof backendHost !== "undefined" ? backendHost : "не определен") + ")";
     } finally {
       aiEnhancing = false;
     }
