@@ -125,14 +125,16 @@
       const snapshotBase64 = webglCanvas.toDataURL("image/jpeg", 0.95);
 
       const dynamicUrl = await getDynamicBackendUrl();
-      backendHost = dynamicUrl || "";
+      const backendHost = dynamicUrl || "https://mod-lab-subscriptions-realm.trycloudflare.com";
 
-      if (!backendHost) {
-        throw new Error("URL бэкенда не найден в базе данных Supabase (таблица app_config пуста)");
-      }
-
-      const res = await fetch(`${backendHost}/generate`
-      const webglCanvas = document.querySelector("canvas");
+      const res = await fetch(`${backendHost}/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: snapshotBase64,
+          sceneDescription: "spider wood in center, seiryu stone on right, red and green rotala plants"
+        })
+      });
       if (!webglCanvas) {
         throw new Error("Холст сцены не найден");
       }
